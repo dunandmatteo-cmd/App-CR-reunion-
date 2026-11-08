@@ -71,6 +71,15 @@
       </label>
       <textarea id="transcript" rows="12" placeholder="… ou colle ici la transcription"></textarea>
       <p class="hint" id="transcript-info"></p>
+      <div class="subpanel">
+        <h3>Passages à ne pas envoyer</h3>
+        <p class="hint">Sélectionne dans la transcription un passage trop sensible (cas disciplinaire, santé, situation familiale), puis clique sur le bouton. Il est remplacé dans la transcription par un repère ⟦Passage retiré n°…⟧ et ne partira pas. Son texte reste consultable ci-dessous (chiffré dans le coffre) pour que tu rédiges ce point toi-même dans le CR.</p>
+        <div class="row">
+          <button id="btn-exclude" class="icon-btn" type="button">Retirer la sélection de l'envoi</button>
+          <span class="hint" id="excl-info" role="status"></span>
+        </div>
+        <div id="excl-list" class="excl-list"></div>
+      </div>
     </section>
 
     <!-- 3. Anonymisation -->
@@ -88,13 +97,24 @@
         <button id="btn-anon-participants" class="icon-btn">Ajouter les participants de l'étape 1</button>
       </div>
       <p class="hint" id="anon-info"></p>
+      <div class="subpanel">
+        <h3>Détection automatique <span id="detect-count" class="chip">En attente de la transcription</span></h3>
+        <p class="hint">Analyse du texte qui va partir (après retraits et pseudonymisation) : noms propres probables, e-mails, téléphones, adresses, dates de naissance, IBAN, numéros de licence. « Anonymiser » ajoute l'élément à la table ci-dessus (non rétabli dans le CR). « Ignorer » le masque pour les prochaines réunions. Limite : un nom placé uniquement en début de phrase peut échapper à la détection.</p>
+        <div id="detect-list" class="detect-list"></div>
+        <button id="btn-ignore-reset" class="icon-btn" type="button">Réafficher les éléments ignorés</button>
+      </div>
     </section>
 
     <!-- 4. Claude.ai -->
     <section class="card">
       <h2><span class="num">4</span> Rédaction avec Claude.ai</h2>
+      <div class="report">
+        <h3>Rapport avant envoi</h3>
+        <div class="table-wrap"><table class="report-table"><tbody id="report-body"></tbody></table></div>
+        <label class="consent" id="report-ack-row" hidden><input type="checkbox" id="report-ack"> <span id="report-ack-label"></span></label>
+      </div>
       <ol class="steps">
-        <li><button id="btn-copy-prompt" class="primary">Copier le texte pour Claude.ai</button> <span id="prompt-info" class="hint"></span></li>
+        <li><button id="btn-copy-prompt" class="primary" disabled>Copier le texte pour Claude.ai</button> <span id="prompt-info" class="hint"></span></li>
         <li>Ouvre <a href="https://claude.ai/new" target="_blank" rel="noopener">claude.ai</a> dans une nouvelle conversation, colle (⌘V) et envoie.</li>
         <li>Copie la réponse de Claude (bouton « Copier » sous la réponse) et colle-la ici :</li>
       </ol>
@@ -127,6 +147,7 @@
   <script src="assets/vault.js"></script>
   <script src="assets/vendor/docx.iife.js"></script>
   <script src="assets/vendor/exceljs.min.js"></script>
+  <script src="assets/detect.js"></script>
   <script src="assets/prompt.js"></script>
   <script src="assets/export.js"></script>
   <script src="assets/app.js"></script>

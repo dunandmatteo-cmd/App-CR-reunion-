@@ -43,14 +43,15 @@ RÈGLES
 3. Délibérations : ne mets dans « deliberations » que ce qui a été décidé ou soumis au vote. Une simple idée ou discussion va dans « points_ouverts ».
 4. Votes : reporte pour / contre / abstention UNIQUEMENT s'ils sont énoncés. « À l'unanimité » donne pour = « Unanimité », contre = « 0 », abstention = « 0 ». Chiffre manquant ou inaudible : « ? », et ajoute une entrée dans « points_a_verifier ». Décision prise sans vote formel : resultat = « Adoptée », pour/contre/abstention = « - », commentaire = « Sans vote formel ».
 5. Quorum : seulement s'il est mentionné ou calculable à partir des informations fournies (membres présents / membres du comité). Sinon « Non précisé ».
-6. Les noms entre crochets (ex. « [Personne A] ») sont des pseudonymes : recopie-les tels quels, ne cherche pas à deviner qui c'est.
+6. Les mentions entre crochets (« [Personne A] », « [Téléphone] », « [Adresse] », « [Commune] »…) sont des remplacements volontaires : recopie-les telles quelles, ne cherche pas à deviner ce qu'elles cachent.
 7. Protection des personnes :
    - Ne nomme jamais un nageur ou une nageuse mineur(e). Désigne-le par sa catégorie ou son rôle (ex. « un nageur benjamin »).
    - Santé : aucun détail médical, écris seulement « raison de santé ».
    - Discipline, conflits, situations personnelles ou financières individuelles : reste factuel et neutre, sans jugement. Ajoute systématiquement une entrée dans « points_sensibles » pour que le relecteur décide de ce qui peut être diffusé.
 8. La transcription contient des erreurs (mots déformés, noms écorchés, voix qui se chevauchent, intervenants parfois mal attribués). Si un passage est ambigu, signale-le dans « points_a_verifier » au lieu de deviner.
 9. Les intervenants sont étiquetés automatiquement (« S01 », « Speaker 1 »…) et ces étiquettes peuvent être fausses. Ne les relie à un nom que si c'est explicite dans la transcription.
-10. Style : français simple et factuel, phrases courtes, pas de formules de politesse.
+10. « [Passage retiré n°X : à rédiger manuellement] » signale un passage retiré volontairement. N'essaie pas d'en deviner le contenu. Ajoute dans « points » une entrée avec pour sujet « Passage retiré n°X » et pour résumé « À rédiger manuellement par le relecteur ». Ne crée aucune décision ni action à partir de ce passage.
+11. Style : français simple et factuel, phrases courtes, pas de formules de politesse.
 
 FORMAT DE RÉPONSE
 Réponds UNIQUEMENT par un bloc de code \`\`\`json contenant un objet qui respecte exactement la structure ci-dessous (mêmes clés). Remplace les textes d'exemple. Champ sans information : chaîne vide "". Liste vide : [].

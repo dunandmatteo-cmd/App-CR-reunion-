@@ -130,3 +130,24 @@ a { color: var(--primary); }
 .lock-card { width: 100%; max-width: 440px; }
 .error { color: var(--accent); font-weight: 600; min-height: 1.2em; margin: 6px 0; }
 .toolbar { margin-top: 4px; align-items: center; }
+.subpanel { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.subpanel h3, .report h3 { font-size: .95rem; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.chip { display: inline-block; font-size: .75rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.chip.warn { background: var(--warn-bg); border-color: var(--warn-line); color: var(--text); }
+.chip.ok { color: var(--ok); border-color: var(--ok); }
+.chip.type { color: var(--primary); border-color: var(--primary); }
+.detect-list, .excl-list { display: grid; gap: 6px; margin: 8px 0; }
+.detect-item, .excl-item {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg);
+}
+.detect-value { font-weight: 600; overflow-wrap: anywhere; }
+.detect-n { color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
+.detect-actions { margin-left: auto; display: flex; gap: 6px; }
+.excl-text { flex: 1 1 240px; min-width: 0; color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
+.excl-item.missing { border-color: var(--warn-line); }
+.report { margin-bottom: 12px; }
+.report-table { min-width: 0; }
+.report-table th { width: 45%; background: transparent; font-weight: 400; color: var(--muted); }
+.report-table td.warn { background: var(--warn-bg); font-weight: 600; }
+.report-table td.ok { color: var(--ok); font-weight: 600; }

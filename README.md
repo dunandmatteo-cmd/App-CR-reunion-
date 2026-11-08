@@ -34,10 +34,12 @@ Il assemble des briques open source existantes au lieu de tout réinventer :
 4. **Ouvre `index.html`** (double-clic ; Safari, Chrome ou Firefox) :
    1. renseigne les informations de la réunion ;
    2. importe le fichier de noScribe ;
-   3. **anonymise** : le bouton « Ajouter les participants » remplit la table. Ajoute les nageurs et les autres personnes citées, en particulier les **mineurs**, avec « Rétablir » décoché ;
-   4. clique sur **Copier le texte pour Claude.ai**, colle-le dans une nouvelle conversation sur claude.ai, puis recopie la réponse dans l'app et clique sur **Importer** ;
-   5. relis et corrige le CR. Les **points sensibles** sont encadrés en rouge, et les responsables, délais ou votes manquants sont surlignés en jaune ;
-   6. **exporte en Word** (pour le secrétaire) et **en Excel** (suivi des actions).
+   3. **retire** les passages trop sensibles : sélectionne-les dans la transcription, puis « Retirer la sélection de l'envoi » ;
+   4. **anonymise** : le bouton « Ajouter les participants » remplit la table. Ajoute les nageurs et les autres personnes citées, en particulier les **mineurs**, avec « Rétablir » décoché. Traite ensuite chaque ligne de la **détection automatique** (Anonymiser ou Ignorer) ;
+   5. lis le **rapport avant envoi**. Si des alertes restent, la copie n'est possible qu'après avoir coché la confirmation ;
+   6. clique sur **Copier le texte pour Claude.ai**, colle-le dans une nouvelle conversation sur claude.ai, puis recopie la réponse dans l'app et clique sur **Importer** ;
+   7. relis et corrige le CR. Les **points sensibles** sont encadrés en rouge, et les responsables, délais ou votes manquants sont surlignés en jaune ;
+   8. **exporte en Word** (pour le secrétaire) et **en Excel** (suivi des actions).
 5. **Après validation** : supprime l'enregistrement audio et le fichier de transcription.
 
 Le travail en cours est gardé **chiffré** dans le navigateur (voir ci-dessous). **Nouvelle réunion** efface tout sauf la liste des noms à anonymiser et les participants habituels.
@@ -111,6 +113,16 @@ Ce que ce chiffrement **ne couvre pas** :
 - **l'audio sur l'iPhone et dans iCloud** : voir « Enregistrer avec l'iPhone » ;
 - un Mac **déverrouillé et laissé sans surveillance** pendant que le coffre est ouvert.
 
+## Ce qui part chez Anthropic, et comment le réduire
+
+Encoder le texte (Base64, etc.) ou le chiffrer avant l'envoi **ne protège rien** : Claude doit pouvoir le lire pour rédiger le CR, et le CR revient en clair. Seule la réduction de ce qui part est efficace. Elle se fait en trois couches, dans cet ordre :
+
+1. **Passages retirés** : le passage sélectionné est remplacé dans la transcription par un repère ⟦Passage retiré n°X⟧. Son texte d'origine est gardé à part, dans le coffre chiffré. Claude reçoit seulement « [Passage retiré n°X : à rédiger manuellement] » et a pour consigne de ne rien en déduire.
+2. **Pseudonymisation** : les noms et données listés dans la table sont remplacés (« [Personne A] », « [Téléphone] »…).
+3. **Détection automatique** sur le texte qui va réellement partir : noms propres probables, e-mails, téléphones, adresses, codes postaux et villes, dates de naissance probables, IBAN, numéros de licence ou de dossier. Elle est volontairement large : « Ignorer » écarte une fausse alerte (mémorisé pour les réunions suivantes). Limites : un nom placé uniquement en début de phrase, un surnom courant ou une périphrase (« le fils du trésorier ») peuvent passer.
+
+Le **rapport avant envoi** résume le tout. La copie est bloquée tant qu'il reste des alertes ou qu'aucun nom n'est anonymisé, sauf si tu coches la confirmation.
+
 ## Confidentialité : points à connaître
 
 - L'audio et la transcription brute **ne quittent jamais le Mac**.
@@ -131,6 +143,7 @@ Ce que ce chiffrement **ne couvre pas** :
 index.html            Page de l'app (ouvrir d'un double-clic)
 assets/app.js         Import de la transcription, anonymisation, édition du CR, écran de verrouillage
 assets/vault.js       Chiffrement du brouillon (AES-GCM, clé dérivée du mot de passe)
+assets/detect.js      Détection des données identifiantes restantes avant envoi
 assets/prompt.js      Consignes de rédaction envoyées à Claude, lecture de la réponse
 assets/export.js      Génération du Word et de l'Excel
 assets/style.css      Mise en forme (thème clair et sombre)

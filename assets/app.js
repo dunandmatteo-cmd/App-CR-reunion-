@@ -4,13 +4,16 @@
 // État + brouillon local, chiffré dans le coffre (voir vault.js)
 // ---------------------------------------------------------------------------
 const META_FIELDS = ["titre", "date", "lieu", "type", "president", "secretaire", "nbMembres", "participants", "consignes"];
-const state = { transcript: "", anon: [], cr: null };
+const state = { transcript: "", anon: [], cr: null, exclusions: [], exclCounter: 0, ignore: [], detections: [] };
 const $ = (id) => document.getElementById(id);
 const AUTO_LOCK_MIN = 15;
 
 function draftData() {
   const meta = Object.fromEntries(META_FIELDS.map((f) => [f, $(`m-${f}`).value]));
-  return { meta, transcript: state.transcript, anon: state.anon, cr: state.cr, response: $("response").value };
+  return {
+    meta, transcript: state.transcript, anon: state.anon, cr: state.cr, response: $("response").value,
+    exclusions: state.exclusions, exclCounter: state.exclCounter, ignore: state.ignore,
+  };
 }
 
 function saveDraft() {
@@ -23,6 +26,9 @@ function applyDraft(d) {
   state.transcript = d.transcript || "";
   $("transcript").value = state.transcript;
   state.anon = Array.isArray(d.anon) ? d.anon : [];
+  state.exclusions = Array.isArray(d.exclusions) ? d.exclusions : [];
+  state.exclCounter = Number(d.exclCounter) || state.exclusions.length;
+  state.ignore = Array.isArray(d.ignore) ? d.ignore : [];
   $("response").value = d.response || "";
   if (d.cr) showCR(d.cr);
 }
@@ -65,6 +71,7 @@ async function importFile(file) {
 function setTranscript(text) {
   state.transcript = text;
   $("transcript").value = text;
+  renderExclusions();
   updateInfos();
   saveDraft();
 }
@@ -139,9 +146,9 @@ function renderAnon() {
   });
 }
 
-function addAnon(nom = "", restaurer = false) {
+function addAnon(nom = "", restaurer = false, pseudo = null) {
   if (nom && state.anon.some((a) => a.nom.trim().toLowerCase() === nom.trim().toLowerCase())) return;
-  state.anon.push({ nom, pseudo: nextPseudo(), restaurer });
+  state.anon.push({ nom, pseudo: pseudo || nextPseudo(), restaurer });
   renderAnon();
   updateInfos();
   saveDraft();
@@ -160,30 +167,215 @@ function addParticipants() {
 // ---------------------------------------------------------------------------
 // Infos et texte envoyé
 // ---------------------------------------------------------------------------
-function currentPrompt() {
-  const { text, count } = anonymize(state.transcript);
-  return { prompt: buildPrompt(text, anonymizeMeta(getMeta())), count };
+// ---------------------------------------------------------------------------
+// Passages retirés de l'envoi
+// ---------------------------------------------------------------------------
+const exclPlaceholder = (n) => `[Passage retiré n°${n} : à rédiger manuellement]`;
+// Repère laissé dans la transcription à la place du passage retiré. Le texte d'origine
+// est conservé à part (dans le coffre chiffré) : modifier le reste de la transcription
+// ne peut donc pas faire réapparaître le passage dans l'envoi.
+const exclMarker = (n) => `⟦Passage retiré n°${n}⟧`;
+
+function applyExclusions(text) {
+  let out = text;
+  let applied = 0;
+  let words = 0;
+  const missing = [];
+  for (const ex of state.exclusions) {
+    if (out.includes(exclMarker(ex.n))) {
+      applied++;
+      words += ex.texte.trim().split(/\s+/).length;
+      out = out.split(exclMarker(ex.n)).join(exclPlaceholder(ex.n));
+    } else {
+      missing.push(ex.n);
+    }
+  }
+  // Repère orphelin (copié-collé, ancien brouillon) : jamais envoyé tel quel.
+  out = out.replace(/⟦Passage retiré n°(\d+)⟧/g, (_, n) => exclPlaceholder(n));
+  return { text: out, applied, words, missing };
 }
 
+function excludeSelection() {
+  const t = $("transcript");
+  const { selectionStart: a, selectionEnd: b } = t;
+  const sel = t.value.slice(a, b);
+  if (sel.trim().length < 3) {
+    $("excl-info").textContent = "Sélectionne d'abord, dans la transcription ci-dessus, le passage à retirer.";
+    return;
+  }
+  if (/⟦Passage retiré n°\d+⟧/.test(sel)) {
+    $("excl-info").textContent = "La sélection contient déjà un passage retiré : sélectionne un autre passage.";
+    return;
+  }
+  state.exclCounter += 1;
+  const n = state.exclCounter;
+  state.exclusions.push({ n, texte: sel });
+  state.transcript = t.value.slice(0, a) + exclMarker(n) + t.value.slice(b);
+  t.value = state.transcript;
+  $("excl-info").textContent = `Passage n°${n} retiré : il ne partira pas.`;
+  renderExclusions();
+  updateInfos();
+  saveDraft();
+}
+
+function restoreExclusion(ex) {
+  const marker = exclMarker(ex.n);
+  if (state.transcript.includes(marker)) {
+    state.transcript = state.transcript.split(marker).join(ex.texte);
+    $("transcript").value = state.transcript;
+  }
+  state.exclusions = state.exclusions.filter((x) => x !== ex);
+  renderExclusions();
+  updateInfos();
+  saveDraft();
+}
+
+function renderExclusions() {
+  const box = $("excl-list");
+  box.replaceChildren();
+  const missing = new Set(applyExclusions(state.transcript).missing);
+  for (const ex of state.exclusions) {
+    const preview = ex.texte.replace(/\s+/g, " ").trim();
+    const gone = missing.has(ex.n);
+    box.append(el("div", { class: `excl-item${gone ? " missing" : ""}` }, [
+      el("span", { class: "chip", text: `n°${ex.n}` }),
+      el("span", { class: "excl-text", text: preview.length > 140 ? preview.slice(0, 140) + "…" : preview }),
+      gone ? el("span", { class: "chip", text: "repère effacé de la transcription" }) : null,
+      el("button", {
+        class: "icon-btn", type: "button", text: gone ? "Oublier" : "Remettre dans la transcription",
+        onclick: () => restoreExclusion(ex),
+      }),
+    ]));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Texte envoyé : retraits → pseudonymisation → détection des restes
+// ---------------------------------------------------------------------------
 function anonymizeMeta(meta) {
   const out = { ...meta };
-  for (const k of ["president", "secretaire", "participants", "consignes"]) out[k] = anonymize(out[k] || "").text;
-  return out;
+  let count = 0;
+  for (const k of ["president", "secretaire", "participants", "consignes", "titre", "lieu"]) {
+    const r = anonymize(out[k] || "");
+    out[k] = r.text;
+    count += r.count;
+  }
+  return { meta: out, count };
 }
 
+function buildOutgoing() {
+  const ex = applyExclusions(state.transcript);
+  const an = anonymize(ex.text);
+  const mt = anonymizeMeta(getMeta());
+  const scanText = [an.text, mt.meta.president, mt.meta.secretaire, mt.meta.participants, mt.meta.consignes, mt.meta.titre, mt.meta.lieu].join("\n");
+  return {
+    prompt: buildPrompt(an.text, mt.meta),
+    replacements: an.count + mt.count,
+    exclusions: ex,
+    detections: detectSensitive(scanText, state.ignore),
+    words: an.text.trim() ? an.text.trim().split(/\s+/).length : 0,
+  };
+}
+
+let infoTimer = null;
 function updateInfos() {
+  clearTimeout(infoTimer);
+  infoTimer = setTimeout(updateInfosNow, 250);
+}
+
+function updateInfosNow() {
+  clearTimeout(infoTimer);
   const words = state.transcript.trim() ? state.transcript.trim().split(/\s+/).length : 0;
   $("transcript-info").textContent = words ? `${words.toLocaleString("fr-FR")} mots` : "";
-  const { prompt, count } = currentPrompt();
-  $("anon-info").textContent = activeAnon().length ? `${count} remplacement(s) effectué(s) dans la transcription et les informations.` : "";
-  $("prompt-preview").value = prompt;
-  $("prompt-info").textContent = words ? `≈ ${Math.round(prompt.length / 1000)} k caractères` : "";
+  const out = buildOutgoing();
+  state.detections = out.detections;
+  $("anon-info").textContent = activeAnon().length ? `${out.replacements} remplacement(s) effectué(s) dans la transcription et les informations.` : "";
+  $("prompt-preview").value = out.prompt;
+  renderDetections(out.detections);
+  renderReport(out, words);
+}
+
+// ---------------------------------------------------------------------------
+// Détections automatiques (étape 3)
+// ---------------------------------------------------------------------------
+function pseudoForType(type) {
+  const base = DETECT_TYPES[type].pseudo.slice(1, -1);
+  const used = new Set(state.anon.map((a) => a.pseudo));
+  for (let i = 1; i < 1000; i++) {
+    const p = i === 1 ? `[${base}]` : `[${base} ${i}]`;
+    if (!used.has(p)) return p;
+  }
+  return `[${base}]`;
+}
+
+function renderDetections(list) {
+  const box = $("detect-list");
+  const badge = $("detect-count");
+  box.replaceChildren();
+  if (!state.transcript.trim()) {
+    badge.textContent = "En attente de la transcription";
+    badge.className = "chip";
+    return;
+  }
+  badge.textContent = list.length ? `${list.length} élément(s) à examiner` : "Rien de détecté";
+  badge.className = `chip ${list.length ? "warn" : "ok"}`;
+  for (const d of list) {
+    const isName = d.type === "nom";
+    box.append(el("div", { class: "detect-item" }, [
+      el("span", { class: "chip type", text: DETECT_TYPES[d.type].label }),
+      el("span", { class: "detect-value", text: d.value }),
+      el("span", { class: "detect-n", text: `×${d.count}` }),
+      el("span", { class: "detect-actions" }, [
+        el("button", {
+          class: "icon-btn", type: "button", text: "Anonymiser",
+          onclick: () => addAnon(d.value, false, isName ? null : pseudoForType(d.type)),
+        }),
+        el("button", {
+          class: "icon-btn", type: "button", text: "Ignorer",
+          onclick: () => {
+            state.ignore.push(d.value);
+            updateInfos();
+            saveDraft();
+          },
+        }),
+      ]),
+    ]));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Rapport avant envoi (étape 4)
+// ---------------------------------------------------------------------------
+function renderReport(out, words) {
+  const byType = {};
+  for (const d of out.detections) byType[d.type] = (byType[d.type] || 0) + 1;
+  const alerts = out.detections.length;
+  const noAnon = !activeAnon().length;
+  const rows = [
+    ["Mots envoyés", words ? out.words.toLocaleString("fr-FR") : "—", ""],
+    ["Remplacements (noms, numéros…)", String(out.replacements), noAnon ? "warn" : "ok"],
+    ["Passages retirés", out.exclusions.applied ? `${out.exclusions.applied} (${out.exclusions.words} mots)` : "0", ""],
+    [
+      "Données identifiantes restantes",
+      alerts ? Object.entries(byType).map(([t, n]) => `${n} × ${DETECT_TYPES[t].label.toLowerCase()}`).join(", ") : "aucune détectée",
+      alerts ? "warn" : "ok",
+    ],
+  ];
+  $("report-body").replaceChildren(...rows.map(([k, v, cls]) => el("tr", {}, [el("th", { text: k }), el("td", { class: cls, text: v })])));
+
+  const needAck = Boolean(words) && (alerts > 0 || noAnon);
+  $("report-ack-row").hidden = !needAck;
+  if (!needAck) $("report-ack").checked = false;
+  $("report-ack-label").textContent = noAnon
+    ? "Aucun nom n'est anonymisé : j'accepte d'envoyer la transcription telle quelle."
+    : "J'ai examiné les alertes restantes et j'accepte d'envoyer ce texte.";
+  $("btn-copy-prompt").disabled = !(Boolean(words) && (!needAck || $("report-ack").checked));
+  $("prompt-info").textContent = words ? `≈ ${Math.round(out.prompt.length / 1000)} k caractères` : "Importe d'abord la transcription (étape 2).";
 }
 
 async function copyPrompt() {
   if (state.transcript.trim().length < 20) return alert("Importe ou colle d'abord la transcription (étape 2).");
-  if (!activeAnon().length && !confirm("Aucun nom à anonymiser n'est défini. Envoyer quand même la transcription telle quelle ?")) return;
-  const { prompt } = currentPrompt();
+  const { prompt } = buildOutgoing();
   try {
     await navigator.clipboard.writeText(prompt);
   } catch {
@@ -376,6 +568,8 @@ function resetAll() {
   if (!confirm("Effacer la réunion en cours (transcription, réponse et CR) ? La liste des noms à anonymiser est conservée.")) return;
   for (const f of ["titre", "lieu", "consignes"]) $(`m-${f}`).value = "";
   $("response").value = "";
+  state.exclusions = [];
+  state.exclCounter = 0;
   state.transcript = "";
   state.cr = null;
   saveDraft(); // garde : noms à anonymiser, participants, président, secrétaire
@@ -475,13 +669,17 @@ function startApp(data) {
   $("m-date").value = new Date().toISOString().slice(0, 10);
   applyDraft(data);
   renderAnon();
-  updateInfos();
+  renderExclusions();
+  updateInfosNow();
   setupAutoLock();
 
   for (const f of META_FIELDS) $(`m-${f}`).addEventListener("input", () => { updateInfos(); saveDraft(); });
   $("file").addEventListener("change", (e) => e.target.files?.[0] && importFile(e.target.files[0]));
-  $("transcript").addEventListener("input", () => { state.transcript = $("transcript").value; updateInfos(); saveDraft(); });
+  $("transcript").addEventListener("input", () => { state.transcript = $("transcript").value; renderExclusions(); updateInfos(); saveDraft(); });
   $("btn-anon-add").addEventListener("click", () => addAnon());
+  $("btn-exclude").addEventListener("click", excludeSelection);
+  $("report-ack").addEventListener("change", () => updateInfosNow());
+  $("btn-ignore-reset").addEventListener("click", () => { state.ignore = []; updateInfos(); saveDraft(); });
   $("btn-anon-participants").addEventListener("click", addParticipants);
   $("btn-copy-prompt").addEventListener("click", copyPrompt);
   $("response").addEventListener("input", saveDraft);
