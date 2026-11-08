@@ -59,7 +59,7 @@ const vault = (() => {
   }
 
   return {
-    supported: () => Boolean(window.crypto?.subtle && window.TextEncoder),
+    supported: () => Boolean(globalThis.crypto?.subtle && globalThis.TextEncoder),
     exists: () => Boolean(read(STORE)),
     unlocked: () => Boolean(key),
 
@@ -129,6 +129,22 @@ const vault = (() => {
       await this.saveNow(currentData);
     },
 
+    // Sauvegarde : le contenu du coffre tel quel (déjà chiffré), à garder hors du navigateur.
+    async exportBackup() {
+      await this.flush();
+      return read(STORE);
+    },
+
+    // Restauration : remplace le coffre par une sauvegarde (même mot de passe qu'à sa création).
+    importBackup(text) {
+      let box;
+      try { box = JSON.parse(text); } catch { throw new Error("Fichier illisible : ce n'est pas une sauvegarde de l'app."); }
+      if (!box || box.v !== 1 || !box.salt || !box.iv || !box.data) throw new Error("Ce fichier n'est pas une sauvegarde de l'app CR.");
+      if (!write(STORE, JSON.stringify(box))) throw new Error("Stockage du navigateur indisponible.");
+      remove(LEGACY);
+      this.lock();
+    },
+
     lock() {
       key = null;
       salt = null;
@@ -142,3 +158,5 @@ const vault = (() => {
     },
   };
 })();
+
+if (typeof module !== "undefined") module.exports = { vault };

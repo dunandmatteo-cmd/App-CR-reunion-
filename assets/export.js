@@ -1,15 +1,7 @@
 "use strict";
 // Exports Word (bibliothèque docx) et Excel (ExcelJS), générés dans le navigateur.
-
-function downloadBlob(blob, name) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = name;
-  document.body.append(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-}
+// Les bibliothèques (2 Mo) ne sont chargées qu'au premier export.
+const VENDOR = { word: "assets/vendor/docx.iife.js", excel: "assets/vendor/exceljs.min.js" };
 
 function fileBase(cr) {
   const safe = `${cr.date || ""}_${cr.titre || "reunion"}`
@@ -25,6 +17,7 @@ function fileBase(cr) {
 // Word
 // ---------------------------------------------------------------------------
 async function exportWord(cr, { inclureVerifs = false } = {}) {
+  await loadScript(VENDOR.word);
   const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, AlignmentType, ShadingType } = docx;
 
   const P = (text, opts = {}) => new Paragraph({ children: [new TextRun({ text: text || "", ...opts })], spacing: { after: 80 } });
@@ -125,6 +118,7 @@ async function exportWord(cr, { inclureVerifs = false } = {}) {
 // Excel : actions + délibérations
 // ---------------------------------------------------------------------------
 async function exportExcel(cr) {
+  await loadScript(VENDOR.excel);
   const wb = new ExcelJS.Workbook();
   wb.creator = "App CR réunion";
   wb.created = new Date();

@@ -33,13 +33,14 @@ Il assemble des briques open source existantes au lieu de tout réinventer :
    Compte de 1 à 3 h de traitement pour 1 h de réunion selon le site de noScribe (sans doute moins sur une puce M5, non mesuré). Tu peux lancer le traitement le soir.
 4. **Ouvre `index.html`** (double-clic ; Safari, Chrome ou Firefox) :
    1. renseigne les informations de la réunion ;
-   2. importe le fichier de noScribe ;
-   3. **retire** les passages trop sensibles : sélectionne-les dans la transcription, puis « Retirer la sélection de l'envoi » ;
-   4. **anonymise** : le bouton « Ajouter les participants » remplit la table. Ajoute les nageurs et les autres personnes citées, en particulier les **mineurs**, avec « Rétablir » décoché. Traite ensuite chaque ligne de la **détection automatique** (Anonymiser ou Ignorer) ;
-   5. lis le **rapport avant envoi**. Si des alertes restent, la copie n'est possible qu'après avoir coché la confirmation ;
-   6. clique sur **Copier le texte pour Claude.ai**, colle-le dans une nouvelle conversation sur claude.ai, puis recopie la réponse dans l'app et clique sur **Importer** ;
-   7. relis et corrige le CR. Les **points sensibles** sont encadrés en rouge, et les responsables, délais ou votes manquants sont surlignés en jaune ;
-   8. **exporte en Word** (pour le secrétaire) et **en Excel** (suivi des actions).
+   2. importe le fichier de noScribe. Les **corrections automatiques** (erreurs récurrentes comme « Sénode » → « Seynod ») s'appliquent d'elles-mêmes ;
+   3. dans **« Qui parle ? »**, associe chaque voix (S01, S02…) à une personne. Le nom est ajouté d'office à l'anonymisation, et Claude saura qui propose, vote ou prend une action ;
+   4. **retire** les passages trop sensibles : sélectionne-les dans la transcription, puis « Retirer la sélection de l'envoi » ;
+   5. **anonymise** : le bouton « Ajouter les participants » remplit la table. Ajoute les nageurs et les autres personnes citées, en particulier les **mineurs**, avec « Rétablir » décoché. Traite ensuite chaque ligne de la **détection automatique** (Anonymiser ou Ignorer) ;
+   6. lis le **rapport avant envoi**. Si des alertes restent, la copie n'est possible qu'après avoir coché la confirmation ;
+   7. clique sur **Copier le texte pour Claude.ai**, colle-le dans une nouvelle conversation sur claude.ai, puis recopie la réponse dans l'app et clique sur **Importer** ;
+   8. relis et corrige le CR (le presse-papiers est vidé à l'import de la réponse). Les **points sensibles** sont encadrés en rouge, et les responsables, délais ou votes manquants sont surlignés en jaune ;
+   9. **exporte en Word** (pour le secrétaire) et **en Excel** (suivi des actions).
 5. **Après validation** : supprime l'enregistrement audio et le fichier de transcription.
 
 Le travail en cours est gardé **chiffré** dans le navigateur (voir ci-dessous). **Nouvelle réunion** efface tout sauf la liste des noms à anonymiser et les participants habituels.
@@ -104,7 +105,9 @@ Au premier lancement, l'app demande de **créer un mot de passe** (10 caractère
 - chiffrement AES-GCM 256 bits avec la Web Crypto API du navigateur, et une clé dérivée du mot de passe (PBKDF2-SHA-256, 600 000 itérations, sel aléatoire) ;
 - le mot de passe n'est enregistré nulle part : **s'il est perdu, le brouillon est irrécupérable** (bouton « Mot de passe oublié » = tout effacer) ;
 - verrouillage par le bouton 🔒 ou **automatiquement après 15 min d'inactivité** ;
-- un ancien brouillon non chiffré est repris dans le coffre puis effacé à la création du mot de passe.
+- un ancien brouillon non chiffré est repris dans le coffre puis effacé à la création du mot de passe ;
+- **sauvegarde** : le bouton « Exporter une sauvegarde chiffrée » télécharge le coffre tel quel (illisible sans le mot de passe). Fais-en une de temps en temps : un « Effacer les données de navigation » de Chrome efface le coffre. Pour la restaurer, utilise « Restaurer une sauvegarde » sur l'écran de verrouillage, avec le mot de passe en vigueur au moment de la sauvegarde ;
+- si une sauvegarde automatique échoue, un **bandeau rouge** s'affiche : exporte alors le Word avant de fermer la page.
 
 Ce que ce chiffrement **ne couvre pas** :
 
@@ -118,8 +121,8 @@ Ce que ce chiffrement **ne couvre pas** :
 Encoder le texte (Base64, etc.) ou le chiffrer avant l'envoi **ne protège rien** : Claude doit pouvoir le lire pour rédiger le CR, et le CR revient en clair. Seule la réduction de ce qui part est efficace. Elle se fait en trois couches, dans cet ordre :
 
 1. **Passages retirés** : le passage sélectionné est remplacé dans la transcription par un repère ⟦Passage retiré n°X⟧. Son texte d'origine est gardé à part, dans le coffre chiffré. Claude reçoit seulement « [Passage retiré n°X : à rédiger manuellement] » et a pour consigne de ne rien en déduire.
-2. **Pseudonymisation** : les noms et données listés dans la table sont remplacés (« [Personne A] », « [Téléphone] »…).
-3. **Détection automatique** sur le texte qui va réellement partir : noms propres probables, e-mails, téléphones, adresses, codes postaux et villes, dates de naissance probables, IBAN, numéros de licence ou de dossier. Elle est volontairement large : « Ignorer » écarte une fausse alerte (mémorisé pour les réunions suivantes). Limites : un nom placé uniquement en début de phrase, un surnom courant ou une périphrase (« le fils du trésorier ») peuvent passer.
+2. **Pseudonymisation** : les noms et données listés dans la table sont remplacés (« [Personne A] », « [Téléphone] »…), y compris s'ils sont transcrits sans accent, sans tiret ou avec une autre casse (« Lea », « Jean Pierre », « LÉA »).
+3. **Détection automatique** sur le texte qui va réellement partir : noms propres probables, e-mails, téléphones, adresses, codes postaux et villes, dates de naissance probables, IBAN, numéros de licence ou de dossier. Elle est volontairement large, y compris pour les prénoms en début de réplique (« S02: Kevin, tu peux… », signalés « nom possible »). « Ignorer » écarte une fausse alerte (mémorisé pour les réunions suivantes). Limites : un surnom qui est aussi un mot courant ou une périphrase (« le fils du trésorier ») peuvent passer.
 
 Le **rapport avant envoi** résume le tout. La copie est bloquée tant qu'il reste des alertes ou qu'aucun nom n'est anonymisé, sauf si tu coches la confirmation.
 
@@ -140,12 +143,27 @@ Le **rapport avant envoi** résume le tout. La copie est bloquée tant qu'il res
 ## Structure
 
 ```
-index.html            Page de l'app (ouvrir d'un double-clic)
-assets/app.js         Import de la transcription, anonymisation, édition du CR, écran de verrouillage
-assets/vault.js       Chiffrement du brouillon (AES-GCM, clé dérivée du mot de passe)
-assets/detect.js      Détection des données identifiantes restantes avant envoi
-assets/prompt.js      Consignes de rédaction envoyées à Claude, lecture de la réponse
-assets/export.js      Génération du Word et de l'Excel
-assets/style.css      Mise en forme (thème clair et sombre)
-assets/vendor/        docx 9.15.3 et ExcelJS 4.4.0 (MIT), embarqués pour fonctionner hors ligne
+index.html              Page de l'app (ouvrir d'un double-clic dans Chrome)
+assets/logic.js         Logique pure : pseudonymisation, passages retirés, corrections, intervenants
+assets/detect.js        Détection des données identifiantes restantes avant envoi
+assets/prompt.js        Consignes de rédaction envoyées à Claude, lecture de la réponse
+assets/vault.js         Coffre chiffré (AES-GCM, clé dérivée du mot de passe), sauvegarde
+assets/export.js        Word et Excel (bibliothèques chargées au premier export)
+assets/ui-common.js     État de la réunion, brouillon, utilitaires
+assets/ui-prepare.js    Étapes 2 à 4 : transcription, intervenants, anonymisation, rapport
+assets/ui-cr.js         Étape 5 : CR éditable, exports, nouvelle réunion
+assets/ui-lock.js       Écran de verrouillage, mot de passe, sauvegarde, démarrage
+assets/style.css        Mise en forme (thème clair et sombre)
+assets/vendor/          docx 9.15.3 et ExcelJS 4.4.0 (MIT), embarqués pour fonctionner hors ligne
+tests/run.test.cjs      Tests automatiques de la logique
 ```
+
+## Tests (pour les modifications du code)
+
+Avec Node.js 20 ou plus récent, sans rien installer :
+
+```bash
+node --test tests/run.test.cjs
+```
+
+Les tests couvrent la pseudonymisation (accents, tirets), les passages retirés, les corrections, les intervenants, la détection, la lecture de la réponse de Claude et le coffre, **sur une transcription de 2 h**.

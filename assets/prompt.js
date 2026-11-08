@@ -49,7 +49,7 @@ RÈGLES
    - Santé : aucun détail médical, écris seulement « raison de santé ».
    - Discipline, conflits, situations personnelles ou financières individuelles : reste factuel et neutre, sans jugement. Ajoute systématiquement une entrée dans « points_sensibles » pour que le relecteur décide de ce qui peut être diffusé.
 8. La transcription contient des erreurs (mots déformés, noms écorchés, voix qui se chevauchent, intervenants parfois mal attribués). Si un passage est ambigu, signale-le dans « points_a_verifier » au lieu de deviner.
-9. Les intervenants sont étiquetés automatiquement (« S01 », « Speaker 1 »…) et ces étiquettes peuvent être fausses. Ne les relie à un nom que si c'est explicite dans la transcription.
+9. Intervenants : une réplique qui commence par un pseudonyme ou un nom suivi de « : » (« [Personne A] : … ») a été attribuée par le relecteur ; tu peux t'en servir pour savoir qui propose, vote ou prend une action. Une étiquette automatique restante (« S01 », « Speaker 1 »…) peut être fausse : ne la relie à une personne que si c'est explicite. La séparation automatique des voix peut se tromper : en cas de doute sur qui a dit quoi, ajoute une entrée dans « points_a_verifier ».
 10. « [Passage retiré n°X : à rédiger manuellement] » signale un passage retiré volontairement. N'essaie pas d'en deviner le contenu. Ajoute dans « points » une entrée avec pour sujet « Passage retiré n°X » et pour résumé « À rédiger manuellement par le relecteur ». Ne crée aucune décision ni action à partir de ce passage.
 11. Style : français simple et factuel, phrases courtes, pas de formules de politesse.
 
@@ -124,3 +124,5 @@ function normalizeCR(raw) {
   cr.points_a_verifier = rows(raw.points_a_verifier, ["passage", "raison"]);
   return cr;
 }
+
+if (typeof module !== "undefined") module.exports = { buildPrompt, extractJson, normalizeCR };

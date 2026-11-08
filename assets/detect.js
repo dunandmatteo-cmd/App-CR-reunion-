@@ -5,6 +5,7 @@
 
 const DETECT_TYPES = {
   nom: { label: "Nom propre probable", pseudo: null },
+  nom_debut: { label: "Nom possible (début de phrase)", pseudo: null },
   email: { label: "E-mail", pseudo: "[E-mail]" },
   telephone: { label: "Téléphone", pseudo: "[Téléphone]" },
   adresse: { label: "Adresse", pseudo: "[Adresse]" },
@@ -25,6 +26,25 @@ const COMMON_CAPS = new Set(
     "Monsieur Madame Mademoiselle Messieurs Mesdames Mme Mmes Mlle Mr Merci Bonjour Bonsoir Oui Non Ok Voilà Alors Donc " +
     "Noël Pâques Toussaint Covid Internet Facebook Instagram WhatsApp Excel Word Google Teams Zoom Claude"
   ).split(/\s+/).map((w) => w.toLowerCase())
+);
+
+// Mots courants en tête de phrase ou de réplique : tout autre mot capitalisé à cet endroit
+// est signalé comme nom possible (« S02: Kevin, tu peux… »).
+const STARTERS = new Set(
+  (
+    "a à ah ainsi alors après attends attendez au aucun aucune aujourd aussi autre autrement aux avant avec " +
+    "bah ben bien bon bonne bref c ça ce cela celle celui cependant certains certes ces cet cette chacun chaque " +
+    "ci comme comment concernant d dans de déjà depuis des donc du écoute écoutez effectivement eh elle elles en " +
+    "encore enfin ensuite entre est et été êtes étant euh excusez exactement faut faudrait finalement hein hier " +
+    "il ils j je jusqu l la là le les leur leurs lui m ma mais maintenant me même merci mes moi mon n ne ni non " +
+    "nos notre nous on ou où ouais oui par parce pardon parmi pas peut peut-être peu plus plusieurs pour pourquoi " +
+    "pourtant puis puisque qu quand que quel quelle quelles quels quelqu quelque quelques qui quoi rien s sa sans " +
+    "se selon ses si sinon soit son sous sur surtout t ta tant te tes toi ton tous tout toute toutes très tu un une " +
+    "voici voilà vos votre vous vraiment y ok okay d'accord bonjour bonsoir salut merci oui non super parfait " +
+    "premier première deuxième troisième dernier dernière prochain prochaine point points question ordre budget " +
+    "concernant proposition vote votes résultat adopté adoptée unanimité qui contre abstention abstentions " +
+    "il y a voilà alors donc ensuite enfin dernièrement également justement normalement apparemment évidemment"
+  ).split(/\s+/)
 );
 
 const MONTHS = "janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre";
@@ -93,28 +113,39 @@ function detectSensitive(text, ignoreList = []) {
   scan("numero", /\b(?:licence|license|dossier|adhérent|adherent|n°|numéro|numero)\s*(?:n°|no|numéro|numero)?\s*:?\s*([A-Z0-9][A-Z0-9-]{4,})/gi, (m) => m[1], (m) => /\d/.test(m[1]));
   scan("numero", /\b\d{7,}\b/g);
 
-  // Noms propres probables : 1 à 3 mots capitalisés en milieu de phrase.
+  // Noms propres probables : 1 à 3 mots capitalisés.
+  // En début de phrase ou de réplique, le premier mot n'est retenu que s'il n'est pas un mot courant.
   const NAME = /[A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ]+(?:-[A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ]+)?(?:\s+[A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ]+(?:-[A-ZÀ-ÖØ-Ý][a-zà-öø-ÿ]+)?){0,2}/gu;
+  const isCommon = (w) => COMMON_CAPS.has(w.toLowerCase()) || STARTERS.has(w.toLowerCase());
   for (const m of masked.matchAll(NAME)) {
     let words = m[0].split(/\s+/);
     let start = m.index;
+    let type = "nom";
     if (isSentenceStart(masked, start)) {
-      // Premier mot en début de phrase : on ne garde que la suite éventuelle (« Merci Léa Martin »).
-      start += words[0].length;
-      words = words.slice(1);
-      while (masked[start] === " ") start++;
+      if (isCommon(words[0])) {
+        start += words[0].length;
+        words = words.slice(1);
+        while (masked[start] === " ") start++;
+      } else if (words.length === 1) {
+        type = "nom_debut"; // un seul mot inconnu en tête de phrase : nom possible
+      }
     }
     words = words.filter((w) => !COMMON_CAPS.has(w.toLowerCase()));
     if (!words.length) continue;
     const value = words.join(" ");
     const idx = text.indexOf(value, start);
     if (idx === -1) continue;
-    add("nom", value, idx, idx + value.length);
+    add(type, value, idx, idx + value.length);
+  }
+
+  // Un même mot signalé à la fois en début et en milieu de phrase : garder « nom ».
+  for (const [key, item] of found) {
+    if (item.type === "nom_debut" && found.has(`nom|${item.value.toLowerCase()}`)) found.delete(key);
   }
 
   // Compte toutes les occurrences (y compris en début de phrase) de chaque nom détecté.
   for (const item of found.values()) {
-    if (item.type !== "nom") continue;
+    if (item.type !== "nom" && item.type !== "nom_debut") continue;
     const re = new RegExp(`(?<![\\p{L}\\p{N}])${item.value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}\\p{N}])`, "gu");
     item.count = Math.max(item.count, (masked.match(re) || []).length);
   }

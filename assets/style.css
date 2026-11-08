@@ -77,14 +77,8 @@ button.danger { color: var(--accent); }
 .sticky { position: sticky; bottom: 0; background: var(--card); padding: 10px 0; border-top: 1px solid var(--line); }
 .consent { display: flex; gap: 10px; align-items: flex-start; color: var(--text); font-size: .9rem; }
 .consent input { width: auto; margin-top: 3px; }
-.rec { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
-.rec.recording #btn-rec { background: var(--accent); border-color: var(--accent); }
-.timer { font-variant-numeric: tabular-nums; font-size: 1.2rem; font-weight: 600; min-width: 70px; }
-#meter { border-radius: 4px; background: var(--bg); }
 .hint { color: var(--muted); font-size: .82rem; margin: 8px 0; }
-.or { text-align: center; color: var(--muted); margin: 10px 0; }
 .file input { padding: 6px; }
-audio { width: 100%; margin-top: 10px; }
 .warn {
   background: var(--warn-bg); border-left: 4px solid var(--warn-line);
   padding: 8px 12px; border-radius: 4px; font-size: .9rem; margin-bottom: 12px;
@@ -102,17 +96,6 @@ td textarea:focus, td input:focus { border-color: var(--primary); background: va
 .list-item { display: flex; gap: 6px; align-items: flex-start; margin-bottom: 6px; }
 .list-item textarea { margin: 0; }
 .icon-btn { padding: 4px 8px; font-size: .8rem; }
-.busy {
-  position: fixed; inset: 0; background: rgba(0,0,0,.45);
-  display: grid; place-content: center; justify-items: center; color: #fff; z-index: 10;
-}
-.busy[hidden] { display: none; }
-.spinner {
-  width: 42px; height: 42px; border-radius: 50%;
-  border: 4px solid rgba(255,255,255,.3); border-top-color: #fff;
-  animation: spin 1s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 520px) {
   .top h1 { font-size: 1.25rem; }
   button, .btn { flex: 1 1 auto; }
@@ -152,3 +135,17 @@ a { color: var(--primary); }
 .report-table td.warn { background: var(--warn-bg); font-weight: 600; }
 .report-table td.ok { color: var(--ok); font-weight: 600; }
 .save-error { position: sticky; top: 0; z-index: 20; margin: 0; padding: 10px 16px; background: var(--accent); color: #fff; font-weight: 600; }
+
+/* Intervenants, corrections, mot de passe, restauration */
+.speakers { display: grid; gap: 6px; margin-top: 8px; }
+.speaker { display: grid; grid-template-columns: auto minmax(110px, auto) minmax(160px, 1fr); gap: 4px 10px; align-items: center; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+.speaker input { margin: 0; }
+.speaker-stats { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.speaker-sample { grid-column: 1 / -1; color: var(--muted); font-size: .82rem; font-style: italic; overflow-wrap: anywhere; }
+details.subpanel > summary { cursor: pointer; list-style: revert; }
+details.subpanel > summary h3 { display: inline-flex; margin: 0; }
+table.compact { min-width: 0; }
+.chip.soft { border-style: dashed; }
+.pw-form { max-width: 440px; margin: 10px 0 0; }
+.lock-card .restore { margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--line); }
+@media (max-width: 520px) { .speaker { grid-template-columns: auto 1fr; } .speaker input { grid-column: 1 / -1; } }
