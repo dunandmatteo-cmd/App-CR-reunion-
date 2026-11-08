@@ -7,10 +7,31 @@
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
+  <section id="lock" class="lock" hidden>
+    <form id="lock-form" class="card lock-card" autocomplete="off">
+      <h2 id="lock-title">Coffre verrouillé</h2>
+      <p id="lock-text" class="hint"></p>
+      <label>Mot de passe<input id="lock-pass" type="password" autocomplete="current-password"></label>
+      <label id="lock-confirm-row">Confirmer le mot de passe<input id="lock-pass2" type="password" autocomplete="new-password"></label>
+      <p id="lock-error" class="error" role="alert"></p>
+      <div class="row">
+        <button id="lock-submit" class="primary" type="submit">Déverrouiller</button>
+        <button id="lock-forgot" class="danger" type="button">Mot de passe oublié</button>
+      </div>
+      <p class="hint">Le chiffrement protège les données <strong>stockées sur ce Mac</strong>. Le texte que tu colles dans Claude.ai doit rester lisible : c'est l'anonymisation qui le protège.</p>
+    </form>
+  </section>
+
+  <div id="app" hidden>
   <header class="top">
     <h1>Compte rendu de réunion</h1>
     <p class="sub">Transcription noScribe → anonymisation → rédaction dans Claude.ai → relecture → Word + Excel</p>
-    <p class="sub small">Tout reste sur ton ordinateur. Seul le texte que tu colles toi-même dans Claude.ai en sort.</p>
+    <p class="sub small">Tout reste sur ton ordinateur, brouillon chiffré. Seul le texte que tu colles toi-même dans Claude.ai en sort.</p>
+    <div class="row toolbar">
+      <button id="btn-lock" class="icon-btn" type="button">🔒 Verrouiller</button>
+      <button id="btn-password" class="icon-btn" type="button">Changer le mot de passe</button>
+      <span class="hint">Verrouillage automatique après 15 min d'inactivité.</span>
+    </div>
   </header>
 
   <main>
@@ -101,7 +122,9 @@
       <p class="hint">Rappel : supprime l'enregistrement audio une fois le CR validé.</p>
     </section>
   </main>
+  </div>
 
+  <script src="assets/vault.js"></script>
   <script src="assets/vendor/docx.iife.js"></script>
   <script src="assets/vendor/exceljs.min.js"></script>
   <script src="assets/prompt.js"></script>

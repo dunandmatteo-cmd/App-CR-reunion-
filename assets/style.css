@@ -1,3 +1,4 @@
+[hidden] { display: none !important; }
 :root {
   --bg: #f4f6f9;
   --card: #ffffff;
@@ -124,3 +125,8 @@ td.center input { width: auto; display: inline-block; }
 td input.short { min-width: 70px; }
 .cr-section.sensitive { border: 2px solid var(--accent); border-radius: 8px; padding: 10px; }
 a { color: var(--primary); }
+.lock { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+.lock[hidden] { display: none; }
+.lock-card { width: 100%; max-width: 440px; }
+.error { color: var(--accent); font-weight: 600; min-height: 1.2em; margin: 6px 0; }
+.toolbar { margin-top: 4px; align-items: center; }

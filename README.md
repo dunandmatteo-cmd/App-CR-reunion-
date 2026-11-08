@@ -40,7 +40,22 @@ Il assemble des briques open source existantes au lieu de tout réinventer :
    6. **exporte en Word** (pour le secrétaire) et **en Excel** (suivi des actions).
 5. **Après validation** : supprime l'enregistrement audio et le fichier de transcription.
 
-Le travail en cours est gardé dans le navigateur. **Nouvelle réunion** efface tout sauf la liste des noms à anonymiser et les participants habituels.
+Le travail en cours est gardé **chiffré** dans le navigateur (voir ci-dessous). **Nouvelle réunion** efface tout sauf la liste des noms à anonymiser et les participants habituels.
+
+## Chiffrement du brouillon
+
+Au premier lancement, l'app demande de **créer un mot de passe** (10 caractères minimum ; une courte phrase est idéale). Le brouillon (transcription, table des vrais noms, réponse de Claude, CR) est ensuite **chiffré dans le navigateur** avant d'être stocké :
+
+- chiffrement AES-GCM 256 bits avec la Web Crypto API du navigateur, et une clé dérivée du mot de passe (PBKDF2-SHA-256, 600 000 itérations, sel aléatoire) ;
+- le mot de passe n'est enregistré nulle part : **s'il est perdu, le brouillon est irrécupérable** (bouton « Mot de passe oublié » = tout effacer) ;
+- verrouillage par le bouton 🔒 ou **automatiquement après 15 min d'inactivité** ;
+- un ancien brouillon non chiffré est repris dans le coffre puis effacé à la création du mot de passe.
+
+Ce que ce chiffrement **ne couvre pas** :
+
+- **le texte envoyé à Claude.ai** : il doit être lisible pour être traité, et c'est l'anonymisation qui le protège ;
+- **les fichiers sur le disque** : audio, transcription noScribe, Word et Excel exportés. Pour eux, active **FileVault** (*Réglages Système → Confidentialité et sécurité → FileVault*) et supprime-les une fois le CR validé ;
+- un Mac **déverrouillé et laissé sans surveillance** pendant que le coffre est ouvert.
 
 ## Confidentialité : points à connaître
 
@@ -60,7 +75,8 @@ Le travail en cours est gardé dans le navigateur. **Nouvelle réunion** efface 
 
 ```
 index.html            Page de l'app (ouvrir d'un double-clic)
-assets/app.js         Import de la transcription, anonymisation, édition du CR
+assets/app.js         Import de la transcription, anonymisation, édition du CR, écran de verrouillage
+assets/vault.js       Chiffrement du brouillon (AES-GCM, clé dérivée du mot de passe)
 assets/prompt.js      Consignes de rédaction envoyées à Claude, lecture de la réponse
 assets/export.js      Génération du Word et de l'Excel
 assets/style.css      Mise en forme (thème clair et sombre)

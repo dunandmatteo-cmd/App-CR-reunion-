@@ -1,31 +1,30 @@
 "use strict";
 
 // ---------------------------------------------------------------------------
-// État + brouillon local (navigateur de ton ordinateur uniquement)
+// État + brouillon local, chiffré dans le coffre (voir vault.js)
 // ---------------------------------------------------------------------------
-const STORE_KEY = "cr-asso-brouillon-v1";
 const META_FIELDS = ["titre", "date", "lieu", "type", "president", "secretaire", "nbMembres", "participants", "consignes"];
 const state = { transcript: "", anon: [], cr: null };
 const $ = (id) => document.getElementById(id);
+const AUTO_LOCK_MIN = 15;
 
-function saveDraft() {
-  try {
-    const meta = Object.fromEntries(META_FIELDS.map((f) => [f, $(`m-${f}`).value]));
-    localStorage.setItem(STORE_KEY, JSON.stringify({ meta, transcript: state.transcript, anon: state.anon, cr: state.cr, response: $("response").value }));
-  } catch { /* stockage indisponible : on continue sans */ }
+function draftData() {
+  const meta = Object.fromEntries(META_FIELDS.map((f) => [f, $(`m-${f}`).value]));
+  return { meta, transcript: state.transcript, anon: state.anon, cr: state.cr, response: $("response").value };
 }
 
-function loadDraft() {
-  try {
-    const d = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
-    if (!d) return;
-    for (const f of META_FIELDS) if (d.meta?.[f] !== undefined) $(`m-${f}`).value = d.meta[f];
-    state.transcript = d.transcript || "";
-    $("transcript").value = state.transcript;
-    state.anon = Array.isArray(d.anon) ? d.anon : [];
-    $("response").value = d.response || "";
-    if (d.cr) showCR(d.cr);
-  } catch { /* brouillon illisible : ignoré */ }
+function saveDraft() {
+  vault.save(draftData());
+}
+
+function applyDraft(d) {
+  if (!d) return;
+  for (const f of META_FIELDS) if (d.meta?.[f] !== undefined) $(`m-${f}`).value = d.meta[f];
+  state.transcript = d.transcript || "";
+  $("transcript").value = state.transcript;
+  state.anon = Array.isArray(d.anon) ? d.anon : [];
+  $("response").value = d.response || "";
+  if (d.cr) showCR(d.cr);
 }
 
 function getMeta() {
@@ -375,23 +374,109 @@ async function guardedExport(fn) {
 
 function resetAll() {
   if (!confirm("Effacer la réunion en cours (transcription, réponse et CR) ? La liste des noms à anonymiser est conservée.")) return;
-  try { localStorage.removeItem(STORE_KEY); } catch { /* ignore */ }
   for (const f of ["titre", "lieu", "consignes"]) $(`m-${f}`).value = "";
   $("response").value = "";
   state.transcript = "";
   state.cr = null;
   saveDraft(); // garde : noms à anonymiser, participants, président, secrétaire
-  location.reload();
+  vault.flush().then(() => location.reload());
 }
 
 // ---------------------------------------------------------------------------
 // Initialisation
 // ---------------------------------------------------------------------------
-function init() {
+// ---------------------------------------------------------------------------
+// Écran de déverrouillage
+// ---------------------------------------------------------------------------
+function showLock(mode, message = "") {
+  const creating = mode === "create";
+  $("lock").hidden = false;
+  $("app").hidden = true;
+  $("lock-title").textContent = creating ? "Créer le mot de passe du coffre" : "Coffre verrouillé";
+  $("lock-text").textContent = creating
+    ? "Tes brouillons (transcription, vrais noms, CR) seront chiffrés sur ce Mac avec ce mot de passe. Il n'est enregistré nulle part : s'il est perdu, les brouillons sont irrécupérables."
+    : "Saisis ton mot de passe pour déchiffrer le brouillon.";
+  $("lock-confirm-row").hidden = !creating;
+  $("lock-forgot").hidden = creating;
+  $("lock-submit").textContent = creating ? "Créer et ouvrir" : "Déverrouiller";
+  $("lock-error").textContent = message;
+  $("lock-pass").value = "";
+  $("lock-pass2").value = "";
+  $("lock-pass").focus();
+  $("lock-form").dataset.mode = mode;
+}
+
+async function submitLock(e) {
+  e.preventDefault();
+  const mode = $("lock-form").dataset.mode;
+  const pass = $("lock-pass").value;
+  $("lock-error").textContent = "";
+  try {
+    let data;
+    if (mode === "create") {
+      if (pass.length < 10) throw new Error("10 caractères minimum (une phrase courte est idéale).");
+      if (pass !== $("lock-pass2").value) throw new Error("Les deux mots de passe sont différents.");
+      $("lock-submit").disabled = true;
+      data = await vault.create(pass);
+    } else {
+      $("lock-submit").disabled = true;
+      data = await vault.unlock(pass);
+    }
+    $("lock").hidden = true;
+    $("app").hidden = false;
+    startApp(data);
+  } catch (err) {
+    $("lock-error").textContent = err.message;
+  } finally {
+    $("lock-submit").disabled = false;
+  }
+}
+
+function forgotPassword() {
+  if (!confirm("Sans le mot de passe, le brouillon chiffré est irrécupérable. Tout effacer et recommencer ?")) return;
+  vault.destroy();
+  showLock("create");
+}
+
+async function lockNow() {
+  await vault.flush();
+  vault.lock();
+  location.reload(); // vide la mémoire de la page
+}
+
+function setupAutoLock() {
+  let t;
+  const arm = () => {
+    clearTimeout(t);
+    t = setTimeout(lockNow, AUTO_LOCK_MIN * 60 * 1000);
+  };
+  for (const ev of ["pointerdown", "keydown", "scroll"]) window.addEventListener(ev, arm, { passive: true });
+  arm();
+}
+
+async function changePassword() {
+  const p1 = prompt("Nouveau mot de passe (10 caractères minimum) :");
+  if (p1 === null) return;
+  if (p1.length < 10) return alert("10 caractères minimum.");
+  const p2 = prompt("Confirme le nouveau mot de passe :");
+  if (p1 !== p2) return alert("Les deux mots de passe sont différents.");
+  await vault.flush();
+  await vault.changePassword(p1, draftData());
+  alert("Mot de passe modifié.");
+}
+
+// ---------------------------------------------------------------------------
+// Initialisation
+// ---------------------------------------------------------------------------
+let started = false;
+function startApp(data) {
+  if (started) return;
+  started = true;
   $("m-date").value = new Date().toISOString().slice(0, 10);
-  loadDraft();
+  applyDraft(data);
   renderAnon();
   updateInfos();
+  setupAutoLock();
 
   for (const f of META_FIELDS) $(`m-${f}`).addEventListener("input", () => { updateInfos(); saveDraft(); });
   $("file").addEventListener("change", (e) => e.target.files?.[0] && importFile(e.target.files[0]));
@@ -404,6 +489,24 @@ function init() {
   $("btn-word").addEventListener("click", () => guardedExport(() => exportWord(state.cr, { inclureVerifs: $("opt-verifs").checked })));
   $("btn-excel").addEventListener("click", () => guardedExport(() => exportExcel(state.cr)));
   $("btn-reset").addEventListener("click", resetAll);
+  $("btn-lock").addEventListener("click", lockNow);
+  $("btn-password").addEventListener("click", changePassword);
+  window.addEventListener("pagehide", () => vault.flush());
+  document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && vault.flush());
+}
+
+function init() {
+  $("lock-form").addEventListener("submit", submitLock);
+  $("lock-forgot").addEventListener("click", forgotPassword);
+  if (!vault.supported()) {
+    $("lock").hidden = false;
+    $("app").hidden = true;
+    $("lock-title").textContent = "Navigateur non compatible";
+    $("lock-text").textContent = "Ce navigateur ne permet pas le chiffrement depuis un fichier local. Ouvre index.html avec Chrome, Firefox ou Safari récent.";
+    $("lock-form").hidden = true;
+    return;
+  }
+  showLock(vault.exists() ? "unlock" : "create");
 }
 
 init();
