@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CR de réunion</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Compte rendu de réunion</h1>
+    <p class="sub">Enregistrer → transcrire → rédiger → relire → exporter les actions</p>
+    <div id="status" class="status"></div>
+  </header>
+
+  <main>
+    <!-- 1. Informations -->
+    <section class="card" id="step-infos">
+      <h2><span class="num">1</span> Informations de la réunion</h2>
+      <div class="grid">
+        <label>Titre<input id="m-titre" placeholder="Ex. Revue NC soudure ligne 3"></label>
+        <label>Date<input id="m-date" type="date"></label>
+        <label>Lieu<input id="m-lieu" placeholder="Salle qualité, Teams…"></label>
+        <label>Type
+          <select id="m-type">
+            <option>Réunion qualité</option>
+            <option>Revue NC / réclamation client</option>
+            <option>Réunion 8D / résolution de problème</option>
+            <option>Revue de direction</option>
+            <option>Réunion d'audit (ouverture / clôture)</option>
+            <option>Réunion production / méthodes</option>
+            <option>Réunion fournisseur</option>
+            <option>Autre</option>
+          </select>
+        </label>
+        <label>Animateur<input id="m-animateur"></label>
+        <label>Rédacteur<input id="m-redacteur"></label>
+      </div>
+      <label>Participants (un par ligne : Nom – fonction)
+        <textarea id="m-participants" rows="3" placeholder="J. Martin – Responsable qualité&#10;P. Durand – Chef d'atelier soudure"></textarea>
+      </label>
+      <details>
+        <summary>Options avancées</summary>
+        <label>Vocabulaire métier pour aider la transcription (séparé par des virgules)
+          <textarea id="m-vocab" rows="2">8D, AMDEC, NC, WPS, DMOS, QMOS, MIG, MAG, TIG, ressuage, magnétoscopie, porosités, caniveaux, manque de fusion, PPAP, Ishikawa</textarea>
+        </label>
+        <label>Consignes particulières pour la rédaction
+          <textarea id="m-consignes" rows="2" placeholder="Ex. insister sur les actions de confinement"></textarea>
+        </label>
+      </details>
+    </section>
+
+    <!-- 2. Audio -->
+    <section class="card" id="step-audio">
+      <h2><span class="num">2</span> Audio</h2>
+      <label class="consent">
+        <input type="checkbox" id="consent">
+        <span>J'ai informé les participants que la réunion est enregistrée, que l'audio est transcrit par un service externe (Mistral AI) et que le texte est traité par Claude (Anthropic) pour rédiger le CR.</span>
+      </label>
+      <div class="rec">
+        <button id="btn-rec" class="primary" disabled>● Enregistrer</button>
+        <button id="btn-pause" disabled>Pause</button>
+        <button id="btn-stop" disabled>■ Arrêter</button>
+        <span id="timer" class="timer">00:00</span>
+        <canvas id="meter" width="120" height="16" aria-hidden="true"></canvas>
+      </div>
+      <p class="hint">Sur téléphone : garde l'écran allumé et l'app au premier plan pendant l'enregistrement. Pose l'appareil au centre de la table.</p>
+      <div class="or">ou</div>
+      <label class="file">Importer un fichier audio (mp3, m4a, wav, webm…)
+        <input type="file" id="file" accept="audio/*,video/webm,video/mp4">
+      </label>
+      <div id="audio-box" hidden>
+        <audio id="player" controls></audio>
+        <div class="row">
+          <a id="dl-audio" class="btn" download>Télécharger l'audio (sauvegarde)</a>
+          <button id="btn-transcribe" class="primary">Transcrire →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Transcription -->
+    <section class="card" id="step-transcript" hidden>
+      <h2><span class="num">3</span> Transcription <small>(corrigeable)</small></h2>
+      <p class="hint">Corrige ici les noms, références et termes techniques mal transcrits avant de générer le CR : c'est ce texte qui fait foi.</p>
+      <textarea id="transcript" rows="14"></textarea>
+      <div class="row">
+        <button id="btn-generate" class="primary">Générer le compte rendu →</button>
+      </div>
+    </section>
+
+    <!-- 4. CR -->
+    <section class="card" id="step-cr" hidden>
+      <h2><span class="num">4</span> Compte rendu <small>(brouillon à relire)</small></h2>
+      <div class="warn">Brouillon généré automatiquement. Vérifie chaque décision, action, responsable et délai avant diffusion.</div>
+      <div id="cr"></div>
+      <div class="row sticky">
+        <button id="btn-excel" class="primary">Exporter Excel (actions + CR)</button>
+        <button id="btn-copy">Copier le texte</button>
+        <button id="btn-reset" class="danger">Nouvelle réunion</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="busy" class="busy" hidden><div class="spinner"></div><p id="busy-msg">Traitement…</p></div>
+  <script src="app.js"></script>
+</body>
+</html>
