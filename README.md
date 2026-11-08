@@ -65,14 +65,16 @@ L'app **Raccourcis** (gratuite, déjà installée) permet de tout préparer en u
 2. **Si** *Niveau de la batterie* *est inférieur à* `50`
    - **Afficher une alerte** : « Batterie faible : branche l'iPhone ou recharge-le avant la réunion. » (laisser « Afficher le bouton Annuler » activé)
    - **Fin si**
-3. **Définir le mode de concentration** : *Activer* *Ne pas déranger* *jusqu'à désactivation*
-4. **Afficher une alerte** : « As-tu annoncé l'enregistrement aux participants ? » (avec bouton Annuler)
-5. **Enregistrer un nouveau mémo vocal** (action de l'app Dictaphone) : ouvre le Dictaphone et démarre l'enregistrement.
+3. **Définir le mode Avion** : *Activer*. Coupe les appels et les SMS, la première cause d'interruption. Le Wi-Fi et le Bluetooth peuvent rester actifs, ce qui ne gêne pas.
+4. **Définir le mode de concentration** : *Activer* *Ne pas déranger* *jusqu'à désactivation* (coupe les sons des notifications et des appels Wi-Fi ou FaceTime)
+5. **Afficher une alerte** : « Mode Avion activé. As-tu annoncé l'enregistrement aux participants ? » (avec bouton Annuler)
+6. **Enregistrer un nouveau mémo vocal** (action de l'app Dictaphone) : ouvre le Dictaphone et démarre l'enregistrement.
 
 **Raccourci 2 : « Fin de réunion »**
 
-1. **Définir le mode de concentration** : *Désactiver* *Ne pas déranger*
-2. **Ouvrir l'app** : *Dictaphone* (pour arrêter si ce n'est pas fait, puis envoyer par AirDrop)
+1. **Définir le mode Avion** : *Désactiver*
+2. **Définir le mode de concentration** : *Désactiver* *Ne pas déranger*
+3. **Ouvrir l'app** : *Dictaphone* (pour arrêter si ce n'est pas fait, puis envoyer par AirDrop)
 
 **Lancer le raccourci**, au choix :
 
@@ -80,13 +82,26 @@ L'app **Raccourcis** (gratuite, déjà installée) permet de tout préparer en u
 - une **icône sur l'écran d'accueil** : dans le raccourci, ⓘ → *Ajouter à l'écran d'accueil* ;
 - **Siri** : « Dis Siri, réunion CR ».
 
-**Avant la première vraie réunion**, fais un essai de 5 minutes en verrouillant l'écran pendant l'enregistrement. Vérifie que l'enregistrement continue et que le fichier s'envoie bien par AirDrop.
+### Enregistrement écran verrouillé : ce qui peut l'interrompre
+
+Le Dictaphone **continue d'enregistrer quand l'iPhone se verrouille**, tout seul ou avec le bouton latéral. Pendant l'enregistrement, un indicateur reste visible (pastille ou forme d'onde rouge dans la Dynamic Island, point orange du micro). Ce qui peut couper ou mettre en pause un enregistrement, ce n'est pas le verrouillage mais une **autre app qui prend le micro ou le son** :
+
+| Cause | Parade |
+|---|---|
+| Appel téléphonique | Mode Avion (raccourci « Réunion CR »). « Ne pas déranger » seul ne suffit pas : par défaut il laisse passer les appels des Favoris, et un 2ᵉ appel du même numéro en moins de 3 min. |
+| Appel FaceTime, WhatsApp, Messenger par Wi-Fi | « Ne pas déranger » (raccourci), ou couper aussi le Wi-Fi |
+| Alarme ou minuteur de l'app Horloge | Vérifier qu'aucune alarme n'est prévue pendant la réunion |
+| Siri déclenché par erreur | Éviter de toucher l'iPhone pendant la réunion. Si besoin, désactiver « Dis Siri » le temps de la réunion. |
+| Ouvrir une app qui utilise le micro (vocal WhatsApp, caméra, Shazam…) | Ne pas se servir de l'iPhone pendant la réunion |
+| Batterie à plat ou stockage plein | Au moins 50 % de batterie et quelques centaines de Mo libres |
+
+**Avant la première vraie réunion**, fais un essai de 5 minutes : lance le raccourci, **verrouille l'écran**, puis demande à quelqu'un de **t'appeler** et de t'envoyer un message. Vérifie à la fin que l'enregistrement dure bien 5 minutes sans trou, et que le fichier s'envoie par AirDrop. C'est le seul moyen d'être sûr du comportement de ton iPhone avec ta version d'iOS.
 
 > Pourquoi pas l'action « Enregistrer du son » de Raccourcis ? Elle enregistre dans le raccourci lui-même, ce qui est moins fiable sur une réunion de 2 h (interruption possible si l'app passe en arrière-plan). Le Dictaphone continue d'enregistrer écran verrouillé.
 
 ### À chaque réunion
 
-1. **Mode Avion, ou au moins Ne pas déranger** (fait par le raccourci « Réunion CR ») : un appel entrant peut interrompre l'enregistrement.
+1. **Mode Avion et Ne pas déranger** (faits par le raccourci « Réunion CR ») : un appel entrant peut interrompre l'enregistrement. Vérifie aussi qu'aucune alarme n'est réglée pendant la réunion.
 2. **Batterie et stockage** : au moins 50 % de batterie pour 2 h, et quelques centaines de Mo libres.
 3. **Placement** : à plat, écran vers le haut, au centre de la table et à égale distance des participants. Mets-le sur un tissu ou un sous-verre pour limiter les bruits de table, et loin des ordinateurs, de la machine à café et des fenêtres ouvertes. Le micro principal est en bas de l'iPhone : oriente ce côté vers le centre.
 4. **Au café** : le bruit de fond (vaisselle, musique, autres tables) dégrade nettement la transcription. Choisis un coin calme, ou fais un test de 2 minutes avant (noScribe permet de ne transcrire qu'un extrait).
