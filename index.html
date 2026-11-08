@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CR de réunion</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <section id="lock" class="lock" hidden>
+    <div class="card lock-card">
+      <form id="lock-form" autocomplete="off">
+        <h2 id="lock-title">Coffre verrouillé</h2>
+        <p id="lock-text" class="hint"></p>
+        <label>Mot de passe<input id="lock-pass" type="password" autocomplete="current-password"></label>
+        <label id="lock-confirm-row">Confirmer le mot de passe<input id="lock-pass2" type="password" autocomplete="new-password"></label>
+        <p id="lock-error" class="error" role="alert"></p>
+        <div class="row">
+          <button id="lock-submit" class="primary" type="submit">Déverrouiller</button>
+          <button id="lock-forgot" class="danger" type="button">Mot de passe oublié</button>
+        </div>
+      </form>
+      <label class="file restore">Restaurer une sauvegarde (.json)
+        <input type="file" id="lock-restore" accept=".json,application/json">
+      </label>
+      <p class="hint">Le chiffrement protège les données <strong>stockées sur ce Mac</strong>. Le texte que tu colles dans Claude.ai doit rester lisible : c'est l'anonymisation qui le protège.</p>
+    </div>
+  </section>
+
+  <div id="app" hidden>
+  <p id="save-error" class="save-error" role="alert" hidden></p>
+  <header class="top">
+    <h1>Compte rendu de réunion</h1>
+    <p class="sub">Transcription noScribe → anonymisation → rédaction dans Claude.ai → relecture → Word + Excel</p>
+    <p class="sub small">Tout reste sur ton ordinateur, brouillon chiffré. Seul le texte que tu colles toi-même dans Claude.ai en sort.</p>
+    <div class="row toolbar">
+      <button id="btn-lock" class="icon-btn" type="button">🔒 Verrouiller</button>
+      <button id="btn-backup" class="icon-btn" type="button">Exporter une sauvegarde chiffrée</button>
+      <button id="btn-password" class="icon-btn" type="button">Changer le mot de passe</button>
+      <span class="hint">Verrouillage automatique après 15 min d'inactivité.</span>
+    </div>
+    <form id="pw-form" class="card pw-form" hidden autocomplete="off">
+      <label>Nouveau mot de passe<input id="pw-new" type="password" autocomplete="new-password"></label>
+      <label>Confirmer<input id="pw-new2" type="password" autocomplete="new-password"></label>
+      <p id="pw-error" class="error" role="alert"></p>
+      <div class="row">
+        <button class="primary" type="submit">Enregistrer</button>
+        <button id="pw-cancel" type="button">Annuler</button>
+      </div>
+    </form>
+    <p id="toolbar-info" class="hint" role="status"></p>
+  </header>
+
+  <main>
+    <!-- 1. Informations -->
+    <section class="card">
+      <h2><span class="num">1</span> Informations de la réunion</h2>
+      <div class="grid">
+        <label>Titre<input id="m-titre" placeholder="Ex. Réunion de bureau de novembre"></label>
+        <label>Date<input id="m-date" type="date"></label>
+        <label>Lieu<input id="m-lieu" placeholder="Club-house, piscine de Seynod…"></label>
+        <label>Type
+          <select id="m-type">
+            <option>Bureau</option>
+            <option>Comité directeur / CA</option>
+            <option>Commission / entraîneurs</option>
+            <option>Autre</option>
+          </select>
+        </label>
+        <label>Président(e) de séance<input id="m-president"></label>
+        <label>Secrétaire de séance<input id="m-secretaire"></label>
+        <label>Nombre de membres de l'instance (quorum)<input id="m-nbMembres" inputmode="numeric" placeholder="Ex. 12"></label>
+      </div>
+      <label>Participants (un par ligne : Nom – qualité)
+        <textarea id="m-participants" rows="3" placeholder="Prénom Nom – Président&#10;Prénom Nom – Trésorière"></textarea>
+      </label>
+      <label>Consignes particulières (facultatif)
+        <textarea id="m-consignes" rows="2" placeholder="Ex. bien détailler le budget du gala"></textarea>
+      </label>
+    </section>
+
+    <!-- 2. Transcription -->
+    <section class="card">
+      <h2><span class="num">2</span> Transcription</h2>
+      <p class="hint">Transcris l'enregistrement avec <strong>noScribe</strong> (gratuit, local) : langue <em>French</em>, qualité <em>Precise</em>, détection des intervenants avec le nombre de participants. Puis importe le fichier produit (.html, .txt ou .vtt), ou colle le texte.</p>
+      <label class="file">Importer la transcription
+        <input type="file" id="file" accept=".txt,.html,.htm,.vtt,text/plain,text/html,text/vtt">
+      </label>
+      <textarea id="transcript" rows="12" placeholder="… ou colle ici la transcription"></textarea>
+      <p class="hint" id="transcript-info"></p>
+
+      <details class="subpanel">
+        <summary><h3>Corrections automatiques <span id="corr-count" class="chip">0</span></h3></summary>
+        <p class="hint">Erreurs de transcription qui reviennent d'une réunion à l'autre (« Sénode » → « Seynod », un nom de famille mal orthographié). Appliquées automatiquement à chaque import ; insensibles aux accents et aux majuscules. Conservées pour les prochaines réunions.</p>
+        <div class="table-wrap">
+          <table id="corr-table" class="compact">
+            <thead><tr><th>Transcrit</th><th>Correction</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="row">
+          <button id="btn-corr-add" class="icon-btn" type="button">+ Ajouter une correction</button>
+          <button id="btn-corr-apply" class="icon-btn" type="button">Appliquer à la transcription</button>
+          <span class="hint" id="corr-info" role="status"></span>
+        </div>
+      </details>
+
+      <div class="subpanel" id="speakers-panel" hidden>
+        <h3>Qui parle ?</h3>
+        <p class="hint">Associe chaque voix détectée par noScribe à une personne : Claude saura qui propose, vote ou prend une action. Le nom saisi est ajouté à la table d'anonymisation et ne part jamais en clair. Si deux personnes partagent une étiquette (erreur de séparation des voix), laisse-la vide.</p>
+        <div id="speakers" class="speakers"></div>
+        <datalist id="participants-list"></datalist>
+      </div>
+
+      <div class="subpanel">
+        <h3>Passages à ne pas envoyer</h3>
+        <p class="hint">Sélectionne dans la transcription un passage trop sensible (cas disciplinaire, santé, situation familiale), puis clique sur le bouton. Il est remplacé par un repère ⟦Passage retiré n°…⟧ et ne partira pas. Son texte reste consultable ci-dessous (chiffré dans le coffre) pour que tu rédiges ce point toi-même.</p>
+        <div class="row">
+          <button id="btn-exclude" class="icon-btn" type="button">Retirer la sélection de l'envoi</button>
+          <span class="hint" id="excl-info" role="status"></span>
+        </div>
+        <div id="excl-list" class="excl-list"></div>
+      </div>
+    </section>
+
+    <!-- 3. Anonymisation -->
+    <section class="card">
+      <h2><span class="num">3</span> Anonymisation avant envoi</h2>
+      <p class="hint">Les noms listés ici sont remplacés par des pseudonymes <strong>avant</strong> que le texte ne quitte l'ordinateur, y compris s'ils sont transcrits sans accent ou sans tiret. Coche « Rétablir » pour remettre le vrai nom dans le CR final (adultes du bureau). Laisse décoché pour les mineurs.</p>
+      <div class="table-wrap">
+        <table id="anon-table">
+          <thead><tr><th>Nom tel qu'il apparaît</th><th>Pseudonyme</th><th>Rétablir dans le CR</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="row">
+        <button id="btn-anon-add" class="icon-btn" type="button">+ Ajouter un nom</button>
+        <button id="btn-anon-participants" class="icon-btn" type="button">Ajouter les participants de l'étape 1</button>
+      </div>
+      <p class="hint" id="anon-info" role="status"></p>
+      <div class="subpanel">
+        <h3>Détection automatique <span id="detect-count" class="chip">En attente de la transcription</span></h3>
+        <p class="hint">Analyse du texte qui va réellement partir : noms propres (y compris en début de réplique), e-mails, téléphones, adresses, dates de naissance, IBAN, numéros de licence. « Anonymiser » ajoute l'élément à la table (non rétabli dans le CR). « Ignorer » l'écarte pour les prochaines réunions.</p>
+        <div id="detect-list" class="detect-list"></div>
+        <button id="btn-ignore-reset" class="icon-btn" type="button">Réafficher les éléments ignorés</button>
+      </div>
+    </section>
+
+    <!-- 4. Claude.ai -->
+    <section class="card">
+      <h2><span class="num">4</span> Rédaction avec Claude.ai</h2>
+      <div class="report">
+        <h3>Rapport avant envoi</h3>
+        <div class="table-wrap"><table class="report-table"><tbody id="report-body"></tbody></table></div>
+        <label class="consent" id="report-ack-row" hidden><input type="checkbox" id="report-ack"> <span id="report-ack-label"></span></label>
+      </div>
+      <ol class="steps">
+        <li><button id="btn-copy-prompt" class="primary" type="button" disabled>Copier le texte pour Claude.ai</button> <span id="prompt-info" class="hint"></span></li>
+        <li>Ouvre <a href="https://claude.ai/new" target="_blank" rel="noopener">claude.ai</a> dans une nouvelle conversation, colle (⌘V) et envoie.</li>
+        <li>Copie la réponse de Claude (bouton « Copier » sous la réponse) et colle-la ici :</li>
+      </ol>
+      <textarea id="response" rows="6" placeholder="Colle ici la réponse de Claude (le bloc JSON)"></textarea>
+      <div class="row">
+        <button id="btn-import" class="primary" type="button">Importer la réponse →</button>
+        <span class="hint" id="import-info" role="status"></span>
+      </div>
+      <details id="preview-details">
+        <summary>Voir le texte envoyé</summary>
+        <textarea id="prompt-preview" rows="10" readonly></textarea>
+      </details>
+    </section>
+
+    <!-- 5. CR -->
+    <section class="card" id="step-cr" hidden>
+      <h2><span class="num">5</span> Compte rendu <small>(brouillon à relire)</small></h2>
+      <div class="warn" id="cr-warn"></div>
+      <div id="cr"></div>
+      <label class="consent"><input type="checkbox" id="opt-verifs"> <span>Inclure la liste « À vérifier » à la fin du Word (pour relecture uniquement)</span></label>
+      <div class="row sticky">
+        <button id="btn-word" class="primary" type="button">Exporter Word</button>
+        <button id="btn-excel" class="primary" type="button">Exporter Excel (actions)</button>
+        <button id="btn-reset" class="danger" type="button">Nouvelle réunion</button>
+        <span class="hint" id="export-info" role="status"></span>
+      </div>
+      <p class="hint">Rappel : supprime l'enregistrement audio une fois le CR validé.</p>
+    </section>
+  </main>
+  </div>
+
+  <!-- Logique pure (testée par tests/run.test.cjs), puis interface. Word et Excel sont chargés à l'export. -->
+  <script src="assets/logic.js"></script>
+  <script src="assets/detect.js"></script>
+  <script src="assets/prompt.js"></script>
+  <script src="assets/vault.js"></script>
+  <script src="assets/export.js"></script>
+  <script src="assets/ui-common.js"></script>
+  <script src="assets/ui-prepare.js"></script>
+  <script src="assets/ui-cr.js"></script>
+  <script src="assets/ui-lock.js"></script>
+</body>
+</html>
