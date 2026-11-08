@@ -116,3 +116,11 @@ td textarea:focus, td input:focus { border-color: var(--primary); background: va
   .top h1 { font-size: 1.25rem; }
   button, .btn { flex: 1 1 auto; }
 }
+.sub.small { font-size: .8rem; }
+.steps { padding-left: 20px; margin: 0 0 8px; }
+.steps li { margin: 8px 0; }
+td.center { text-align: center; }
+td.center input { width: auto; display: inline-block; }
+td input.short { min-width: 70px; }
+.cr-section.sensitive { border: 2px solid var(--accent); border-radius: 8px; padding: 10px; }
+a { color: var(--primary); }

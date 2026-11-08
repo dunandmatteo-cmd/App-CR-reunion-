@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CR de réunion</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Compte rendu de réunion</h1>
+    <p class="sub">Transcription noScribe → anonymisation → rédaction dans Claude.ai → relecture → Word + Excel</p>
+    <p class="sub small">Tout reste sur ton ordinateur. Seul le texte que tu colles toi-même dans Claude.ai en sort.</p>
+  </header>
+
+  <main>
+    <!-- 1. Informations -->
+    <section class="card">
+      <h2><span class="num">1</span> Informations de la réunion</h2>
+      <div class="grid">
+        <label>Titre<input id="m-titre" placeholder="Ex. Réunion de bureau de novembre"></label>
+        <label>Date<input id="m-date" type="date"></label>
+        <label>Lieu<input id="m-lieu" placeholder="Club-house, piscine de Seynod…"></label>
+        <label>Type
+          <select id="m-type">
+            <option>Bureau</option>
+            <option>Comité directeur / CA</option>
+            <option>Commission / entraîneurs</option>
+            <option>Autre</option>
+          </select>
+        </label>
+        <label>Président(e) de séance<input id="m-president"></label>
+        <label>Secrétaire de séance<input id="m-secretaire"></label>
+        <label>Nombre de membres de l'instance (quorum)<input id="m-nbMembres" inputmode="numeric" placeholder="Ex. 12"></label>
+      </div>
+      <label>Participants (un par ligne : Nom – qualité)
+        <textarea id="m-participants" rows="3" placeholder="Prénom Nom – Président&#10;Prénom Nom – Trésorière"></textarea>
+      </label>
+      <label>Consignes particulières (facultatif)
+        <textarea id="m-consignes" rows="2" placeholder="Ex. bien détailler le budget du gala"></textarea>
+      </label>
+    </section>
+
+    <!-- 2. Transcription -->
+    <section class="card">
+      <h2><span class="num">2</span> Transcription</h2>
+      <p class="hint">Transcris l'enregistrement avec <strong>noScribe</strong> (gratuit, local) : langue <em>French</em>, qualité <em>Precise</em>, détection des intervenants avec le nombre de participants. Puis importe le fichier produit (.html, .txt ou .vtt), ou colle le texte.</p>
+      <label class="file">Importer la transcription
+        <input type="file" id="file" accept=".txt,.html,.htm,.vtt,text/plain,text/html,text/vtt">
+      </label>
+      <textarea id="transcript" rows="12" placeholder="… ou colle ici la transcription"></textarea>
+      <p class="hint" id="transcript-info"></p>
+    </section>
+
+    <!-- 3. Anonymisation -->
+    <section class="card">
+      <h2><span class="num">3</span> Anonymisation avant envoi</h2>
+      <p class="hint">Les noms listés ici sont remplacés par des pseudonymes <strong>avant</strong> que le texte ne quitte l'ordinateur. Coche « Rétablir » pour remettre le vrai nom dans le CR final (adultes du bureau, par exemple). Laisse décoché pour les mineurs. Pense à ajouter aussi les prénoms seuls et les surnoms.</p>
+      <div class="table-wrap">
+        <table id="anon-table">
+          <thead><tr><th>Nom tel qu'il apparaît</th><th>Pseudonyme</th><th>Rétablir dans le CR</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="row">
+        <button id="btn-anon-add" class="icon-btn">+ Ajouter un nom</button>
+        <button id="btn-anon-participants" class="icon-btn">Ajouter les participants de l'étape 1</button>
+      </div>
+      <p class="hint" id="anon-info"></p>
+    </section>
+
+    <!-- 4. Claude.ai -->
+    <section class="card">
+      <h2><span class="num">4</span> Rédaction avec Claude.ai</h2>
+      <ol class="steps">
+        <li><button id="btn-copy-prompt" class="primary">Copier le texte pour Claude.ai</button> <span id="prompt-info" class="hint"></span></li>
+        <li>Ouvre <a href="https://claude.ai/new" target="_blank" rel="noopener">claude.ai</a> dans une nouvelle conversation, colle (⌘V) et envoie.</li>
+        <li>Copie la réponse de Claude (bouton « Copier » sous la réponse) et colle-la ici :</li>
+      </ol>
+      <textarea id="response" rows="6" placeholder="Colle ici la réponse de Claude (le bloc JSON)"></textarea>
+      <div class="row">
+        <button id="btn-import" class="primary">Importer la réponse →</button>
+      </div>
+      <details>
+        <summary>Voir le texte envoyé</summary>
+        <textarea id="prompt-preview" rows="10" readonly></textarea>
+      </details>
+    </section>
+
+    <!-- 5. CR -->
+    <section class="card" id="step-cr" hidden>
+      <h2><span class="num">5</span> Compte rendu <small>(brouillon à relire)</small></h2>
+      <div class="warn" id="cr-warn">Brouillon : vérifie les votes, décisions, responsables et délais avant d'envoyer au secrétaire.</div>
+      <div id="cr"></div>
+      <label class="consent"><input type="checkbox" id="opt-verifs"> <span>Inclure la liste « À vérifier » à la fin du Word (pour relecture uniquement)</span></label>
+      <div class="row sticky">
+        <button id="btn-word" class="primary">Exporter Word</button>
+        <button id="btn-excel" class="primary">Exporter Excel (actions)</button>
+        <button id="btn-reset" class="danger">Nouvelle réunion</button>
+      </div>
+      <p class="hint">Rappel : supprime l'enregistrement audio une fois le CR validé.</p>
+    </section>
+  </main>
+
+  <script src="assets/vendor/docx.iife.js"></script>
+  <script src="assets/vendor/exceljs.min.js"></script>
+  <script src="assets/prompt.js"></script>
+  <script src="assets/export.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
