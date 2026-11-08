@@ -6,7 +6,7 @@ Il assemble des briques open source existantes au lieu de tout réinventer :
 
 | Étape | Outil | Coût | Où sont les données |
 |---|---|---|---|
-| Enregistrer | Dictaphone (iPhone) ou QuickTime (Mac) | gratuit | sur l'appareil |
+| Enregistrer | Dictaphone de l'iPhone, transfert par AirDrop | gratuit | sur l'iPhone, puis sur le Mac |
 | Transcrire et séparer les voix | [noScribe](https://github.com/kaixxx/noScribe) (Whisper + pyannote, GPL-3.0) | gratuit | sur le Mac, hors ligne |
 | Anonymiser | cette app | gratuit | sur le Mac |
 | Rédiger le CR | [Claude.ai](https://claude.ai), par copier-coller | gratuit (dans les limites de ton offre) | le texte **anonymisé** part chez Anthropic |
@@ -23,7 +23,7 @@ Il assemble des briques open source existantes au lieu de tout réinventer :
 ## Utilisation
 
 1. **Avant la réunion** : préviens les participants que la réunion est enregistrée, et pourquoi.
-2. **Enregistre** avec le Dictaphone de l'iPhone posé au centre de la table, ou QuickTime sur le Mac (*Fichier → Nouvel enregistrement audio*). Transfère le fichier sur le Mac (AirDrop).
+2. **Enregistre** avec le Dictaphone de l'iPhone posé au centre de la table (voir « Enregistrer avec l'iPhone » ci-dessous), puis envoie le fichier .m4a sur le Mac par **AirDrop**.
 3. **Transcris avec noScribe** :
    - Langue : *French* ;
    - Qualité : *Precise* ;
@@ -42,6 +42,30 @@ Il assemble des briques open source existantes au lieu de tout réinventer :
 
 Le travail en cours est gardé **chiffré** dans le navigateur (voir ci-dessous). **Nouvelle réunion** efface tout sauf la liste des noms à anonymiser et les participants habituels.
 
+## Enregistrer avec l'iPhone
+
+### Une seule fois : régler l'iPhone
+
+- **Synchronisation iCloud du Dictaphone** : *Réglages → [ton nom] → iCloud → Afficher tout → Dictaphone*. Si elle est activée, chaque enregistrement est copié sur iCloud et sur tes autres appareils. Deux choix :
+  - **la désactiver** (le plus simple : l'audio ne quitte l'iPhone que par AirDrop) ;
+  - ou garder la synchronisation et activer la **Protection avancée des données** iCloud (*Réglages → [ton nom] → iCloud*), qui chiffre de bout en bout la plupart des données iCloud. Vérifie dans la liste d'Apple que le Dictaphone en fait partie.
+- **Code de déverrouillage** : un iPhone protégé par un code chiffre son stockage. Un code à 6 chiffres minimum, et Face ID.
+- **Qualité audio** (*Réglages → Apps → Dictaphone → Qualité audio*) : *Compressé* suffit pour la transcription ; *Sans perte* donne des fichiers bien plus lourds.
+
+### À chaque réunion
+
+1. **Mode Avion, ou au moins Ne pas déranger** : un appel entrant peut interrompre l'enregistrement.
+2. **Batterie et stockage** : au moins 50 % de batterie pour 2 h, et quelques centaines de Mo libres.
+3. **Placement** : à plat, écran vers le haut, au centre de la table et à égale distance des participants. Mets-le sur un tissu ou un sous-verre pour limiter les bruits de table, et loin des ordinateurs, de la machine à café et des fenêtres ouvertes. Le micro principal est en bas de l'iPhone : oriente ce côté vers le centre.
+4. **Au café** : le bruit de fond (vaisselle, musique, autres tables) dégrade nettement la transcription. Choisis un coin calme, ou fais un test de 2 minutes avant (noScribe permet de ne transcrire qu'un extrait).
+5. **Annonce** l'enregistrement en début de réunion, et éventuellement fais-le confirmer à l'oral.
+
+### Après la réunion
+
+1. **AirDrop vers le Mac** : le transfert est direct et chiffré entre les deux appareils, et le fichier arrive dans *Téléchargements*. Range-le dans un dossier dédié.
+2. **Supprime l'enregistrement sur l'iPhone**, puis **vide « Supprimés récemment »** dans le Dictaphone. Sinon il y reste environ 30 jours (durée réglable dans *Réglages → Apps → Dictaphone*).
+3. **Sauvegardes** : si l'iPhone est sauvegardé (iCloud ou Mac) avant la suppression, l'audio s'y trouve aussi. Ça se règle en le supprimant rapidement, ou avec la Protection avancée des données.
+
 ## Chiffrement du brouillon
 
 Au premier lancement, l'app demande de **créer un mot de passe** (10 caractères minimum ; une courte phrase est idéale). Le brouillon (transcription, table des vrais noms, réponse de Claude, CR) est ensuite **chiffré dans le navigateur** avant d'être stocké :
@@ -55,6 +79,7 @@ Ce que ce chiffrement **ne couvre pas** :
 
 - **le texte envoyé à Claude.ai** : il doit être lisible pour être traité, et c'est l'anonymisation qui le protège ;
 - **les fichiers sur le disque** : audio, transcription noScribe, Word et Excel exportés. Pour eux, active **FileVault** (*Réglages Système → Confidentialité et sécurité → FileVault*) et supprime-les une fois le CR validé ;
+- **l'audio sur l'iPhone et dans iCloud** : voir « Enregistrer avec l'iPhone » ;
 - un Mac **déverrouillé et laissé sans surveillance** pendant que le coffre est ouvert.
 
 ## Confidentialité : points à connaître
