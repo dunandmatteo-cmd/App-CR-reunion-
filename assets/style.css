@@ -151,3 +151,4 @@ a { color: var(--primary); }
 .report-table th { width: 45%; background: transparent; font-weight: 400; color: var(--muted); }
 .report-table td.warn { background: var(--warn-bg); font-weight: 600; }
 .report-table td.ok { color: var(--ok); font-weight: 600; }
+.save-error { position: sticky; top: 0; z-index: 20; margin: 0; padding: 10px 16px; background: var(--accent); color: #fff; font-weight: 600; }

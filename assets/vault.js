@@ -21,7 +21,14 @@ const vault = (() => {
   let pending = null;
   let timer = null;
 
-  const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
+  // Conversion par blocs : passer tout le tableau en arguments (String.fromCharCode(...octets))
+  // dépasse la pile du navigateur au-delà d'environ 150 000 octets, soit une réunion d'1 h 30.
+  const b64 = (buf) => {
+    const bytes = new Uint8Array(buf);
+    let bin = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin);
+  };
   const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 
   function read(name) {
@@ -102,9 +109,18 @@ const vault = (() => {
       await this.saveNow(obj);
     },
 
+    // Appelé quand une sauvegarde échoue (à brancher sur un message visible dans l'app).
+    onStatus: null,
+
     async saveNow(obj) {
       if (!key) return;
-      if (!write(STORE, await encryptObject(obj))) console.warn("Stockage local indisponible : brouillon non sauvegardé.");
+      try {
+        if (!write(STORE, await encryptObject(obj))) throw new Error("stockage du navigateur plein ou indisponible");
+        this.onStatus?.(null);
+      } catch (err) {
+        console.error("Sauvegarde du brouillon impossible :", err);
+        this.onStatus?.(err);
+      }
     },
 
     async changePassword(newPassword, currentData) {

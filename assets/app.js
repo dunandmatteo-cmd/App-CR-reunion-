@@ -672,6 +672,10 @@ function startApp(data) {
   renderExclusions();
   updateInfosNow();
   setupAutoLock();
+  vault.onStatus = (err) => {
+    $("save-error").hidden = !err;
+    if (err) $("save-error").textContent = `⚠ Brouillon NON sauvegardé (${err.message}). Ne verrouille pas et ne ferme pas la page : exporte d'abord le Word, puis signale le problème.`;
+  };
 
   for (const f of META_FIELDS) $(`m-${f}`).addEventListener("input", () => { updateInfos(); saveDraft(); });
   $("file").addEventListener("change", (e) => e.target.files?.[0] && importFile(e.target.files[0]));
